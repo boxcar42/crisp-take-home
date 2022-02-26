@@ -31,6 +31,9 @@
     <None Update="orders-invalid-sample.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
+    <None Update="orders-badtransform-sample.csv">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="orders-sample.csv">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

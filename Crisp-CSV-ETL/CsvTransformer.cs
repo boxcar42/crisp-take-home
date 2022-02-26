@@ -17,8 +17,10 @@ namespace Crisp_CSV_ETL
         protected internal JToken Mappings { get; }
         protected HeaderRow Headers { get; set; }
         public List<ImportRow> ImportRows { get; private set; } = new List<ImportRow>();
-        public List<Row> ResultRows { get; private set; } = new List<Row>();
+        public List<ResultRow> ResultRows { get; private set; } = new List<ResultRow>();
         private StreamWriter _logWriter = null;
+        private int _rowIndex = 0;
+        private CsvReader _csvReader = null;
 
         public CsvTransformer(string mappingsFilePath) : this(mappingsFilePath, null)
         {
@@ -36,19 +38,24 @@ namespace Crisp_CSV_ETL
             return obj["columns"];
         }
 
-        public async Task ReadCsvAsync(StreamReader streamReader)
+        public async Task ReadCsvAsync(StreamReader streamReader, int batchSize = int.MaxValue)
         {
-            var csvReader = new CsvReader(streamReader, ",");
-            csvReader.Read();
-            Headers = new HeaderRow(csvReader);
-            var rowIndex = 1;
-            while (csvReader.Read())
+            if (_csvReader == null)
+                _csvReader = new CsvReader(streamReader, ",");
+            // New import session
+            if (_rowIndex == 0)
             {
-                var importRow = new ImportRow(Headers, csvReader, rowIndex++);
+                _csvReader.Read();
+                Headers = new HeaderRow(_csvReader);
+                _rowIndex++;
+            }
+            while (ImportRows.Count < batchSize && _csvReader.Read())
+            {
+                var importRow = new ImportRow(Headers, _csvReader, _rowIndex++);
                 ImportRows.Add(importRow);
             }
 
-            await ImportCsvAsync();
+            await TransformCsvAsync();
 
             if (_logWriter != null)
             {
@@ -72,26 +79,29 @@ namespace Crisp_CSV_ETL
             }
         }
 
-        private async Task ImportCsvAsync()
+        private async Task TransformCsvAsync()
         {
             var validImportRows = ImportRows.Where(r => r.IsValid);
             foreach (var importRow in validImportRows)
             {
-                var row = new Row(Mappings);
+                var row = new ResultRow(Mappings);
                 row.TransformCsvRow(importRow);
                 ResultRows.Add(row);
             }
         }
 
-        public async Task WriteTransformedCsvAsync(StreamWriter streamWriter)
+        public async Task WriteTransformedCsvAsync(StreamWriter streamWriter, bool addHeader = true)
         {
             var csvWriter = new CsvWriter(streamWriter);
-            var emptyRow = new Row(Mappings);
-            foreach(var column in emptyRow.Columns)
+            if (addHeader)
             {
-                csvWriter.WriteField(column.Name);
+                var emptyRow = new ResultRow(Mappings);
+                foreach (var column in emptyRow.Columns)
+                {
+                    csvWriter.WriteField(column.Name);
+                }
+                csvWriter.NextRecord();
             }
-            csvWriter.NextRecord();
 
             foreach (var row in ResultRows.Where(r => r.IsValid))
             {
@@ -112,11 +122,5 @@ namespace Crisp_CSV_ETL
                 _logWriter.Dispose();
             }
         }
-
-        // todo: write tests
-
-
-
-        // todo: documentation
     }
 }

@@ -43,8 +43,16 @@ namespace Crisp_CSV_ETL_Runner
             using (var streamWriter = new StreamWriter($"{prefix}-transformed.csv"))
             using (var transformer = new CsvTransformer(_mappingsFilePath, $"{prefix}-errors.log"))
             {
-                await transformer.ReadCsvAsync(streamReader);
-                await transformer.WriteTransformedCsvAsync(streamWriter);
+                const int batchSize = 500;
+                var addHeader = true;
+                do
+                {
+                    transformer.ImportRows.Clear();
+                    await transformer.ReadCsvAsync(streamReader, batchSize);
+                    await transformer.WriteTransformedCsvAsync(streamWriter, addHeader);
+                    addHeader = false;
+                    transformer.ResultRows.Clear();
+                } while (transformer.ImportRows.Count > 0);
             }
             Console.WriteLine($"End transforming {prefix}.csv");
             Console.WriteLine();

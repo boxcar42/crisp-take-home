@@ -7,31 +7,31 @@ using System.Text.RegularExpressions;
 
 namespace Crisp_CSV_ETL.Models
 {
-    public class Row
+    public class ResultRow
     {
-        public List<Column> Columns { get; set; } = new List<Column>();
+        public List<ResultColumn> Columns { get; set; } = new List<ResultColumn>();
         public List<string> TransformErrors { get; } = new List<string>();
         public bool IsValid { get => !TransformErrors.Any(); }
-        public Row() { }
-        public Row(JToken columnMappings)
+        public ResultRow() { }
+        public ResultRow(JToken columnMappings)
         {
             foreach (var mapping in columnMappings)
             {
-                Column column;
+                ResultColumn column;
                 switch (mapping["type"].ToString())
                 {
                     case "Integer":
-                        column = new Column<int>();
+                        column = new ResultColumn<int>();
                         break;
                     case "Date":
-                        column = new Column<DateTime>();
+                        column = new ResultColumn<DateTime>();
                         break;
                     case "BigDecimal":
-                        column = new Column<decimal>();
+                        column = new ResultColumn<decimal>();
                         break;
                     case "String":
                     default:
-                        column = new Column<string>();
+                        column = new ResultColumn<string>();
                         break;
                 }
                 column.Name = mapping["name"].ToString();

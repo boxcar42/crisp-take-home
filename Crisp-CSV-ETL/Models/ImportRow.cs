@@ -63,7 +63,7 @@ namespace Crisp_CSV_ETL.Models
                     rgPattern = @"^\d{1,2}$"; 
                     break;
                 case "Product Number":
-                    rgPattern = @"^[A-Za-z0-9-]+$";
+                    rgPattern = @"^[A-Za-z0-9]+$";
                     break;
                 case "Product Name":
                     rgPattern = @"^[A-Za-z ]+$";

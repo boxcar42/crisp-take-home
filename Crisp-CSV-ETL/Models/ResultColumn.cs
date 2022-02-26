@@ -11,7 +11,7 @@ namespace Crisp_CSV_ETL.Models
         ProperCased = 1
     }
 
-    public abstract class Column
+    public abstract class ResultColumn
     {
         public string Name { get; set; }
         public string MapFrom { get; set; }
@@ -21,7 +21,7 @@ namespace Crisp_CSV_ETL.Models
         public abstract void ParseValue(string value);
     }
 
-    public class Column<T> : Column
+    public class ResultColumn<T> : ResultColumn
     {
         private T _value;
         public override object Value

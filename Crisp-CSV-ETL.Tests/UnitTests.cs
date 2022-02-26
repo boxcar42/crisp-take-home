@@ -15,7 +15,7 @@ namespace Crisp_CSV_ETL.Tests
         public void Create_Row_With_Configured_Mappings()
         {
             var parser = new CsvTransformer(mappingsFilePath);
-            var row = new Row(parser.Mappings);
+            var row = new ResultRow(parser.Mappings);
 
             Assert.Equal(6, row.Columns.Count);
             Assert.Equal(1, row.Columns.Count(x => x.Format == Models.ColumnFormatType.ProperCased));
@@ -28,9 +28,17 @@ namespace Crisp_CSV_ETL.Tests
         [Fact]
         public void Column_Requires_Proper_Type()
         {
-            var column = new Column<int>();
+            var column = new ResultColumn<int>();
 
             Assert.Throws<InvalidCastException>(() => column.Value = "bad value");
+        }
+
+        [Fact]
+        public void Column_Parse_Value()
+        {
+            var column = new ResultColumn<DateTime>();
+            column.ParseValue("2022/03/02");
+            Assert.Equal(new DateTime(2022, 03, 02), column.Value);
         }
 
         [Fact]
@@ -41,7 +49,8 @@ namespace Crisp_CSV_ETL.Tests
             {
                 await transformer.ReadCsvAsync(streamReader);
             }
-            Assert.Equal(5, transformer.ImportRows.Sum(x => x.ValidationErrors.Count));
+            Assert.Equal(6, transformer.ImportRows.Sum(r => r.ValidationErrors.Count));
+            Assert.Equal(2, transformer.ImportRows.Count(r => !r.IsValid));
         }
 
         [Fact]
@@ -52,7 +61,19 @@ namespace Crisp_CSV_ETL.Tests
             {
                 await transformer.ReadCsvAsync(streamReader);                
             }
-            Assert.Equal(2, transformer.ResultRows.Count);
+            Assert.Equal(2, transformer.ResultRows.Count(r => r.IsValid));
+        }
+
+        [Fact]
+        public async Task Transform_Errors_Are_Collected()
+        {
+            var transformer = new CsvTransformer(mappingsFilePath);
+            using (var streamReader = new StreamReader("orders-badtransform-sample.csv"))
+            {
+                await transformer.ReadCsvAsync(streamReader);
+            }
+            Assert.Equal(2, transformer.ResultRows.Sum(r => r.TransformErrors.Count));
+            Assert.Equal(2, transformer.ResultRows.Count(r => !r.IsValid));
         }
     }
 }
