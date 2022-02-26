@@ -1,0 +1,35 @@
+{
+  "columns": [
+    {
+      "name": "OrderID",
+      "type": "Integer",
+      "mapFrom": "{Order Number}"
+    },
+    {
+      "name": "OrderDate",
+      "type": "Date",
+      "mapFrom": "{Year}/{Month}/{Day}"
+    },
+    {
+      "name": "ProductId",
+      "type": "String",
+      "mapFrom": "{Product Number}"
+    },
+    {
+      "name": "ProductName",
+      "type": "String",
+      "format":  "ProperCased",
+      "mapFrom": "{Product Name}"
+    },
+    {
+      "name": "Quantity",
+      "type": "BigDecimal",
+      "mapFrom": "{Count}"
+    },
+    {
+      "name": "Unit",
+      "type": "String",
+      "mapFrom": "kg"
+    }
+  ]
+}
