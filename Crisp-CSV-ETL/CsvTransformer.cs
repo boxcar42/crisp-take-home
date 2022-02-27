@@ -40,6 +40,9 @@ namespace Crisp_CSV_ETL
 
         public async Task ReadCsvAsync(StreamReader streamReader, int batchSize = int.MaxValue)
         {
+            if (streamReader == null)
+                throw new ArgumentNullException(nameof(streamReader));
+
             if (_csvReader == null)
                 _csvReader = new CsvReader(streamReader, ",");
             // New import session
@@ -92,6 +95,9 @@ namespace Crisp_CSV_ETL
 
         public async Task WriteTransformedCsvAsync(StreamWriter streamWriter, bool addHeader = true)
         {
+            if (streamWriter == null)
+                throw new ArgumentNullException(nameof(streamWriter));
+
             var csvWriter = new CsvWriter(streamWriter);
             if (addHeader)
             {

@@ -1,4 +1,5 @@
 using Crisp_CSV_ETL.Models;
+using NReco.Csv;
 using System;
 using System.IO;
 using System.Linq;
@@ -42,6 +43,22 @@ namespace Crisp_CSV_ETL.Tests
         }
 
         [Fact]
+        public async Task HeaderRow_Translates_Index_And_Name()
+        {
+            using (var streamReader = new StreamReader("orders-sample.csv"))
+            {
+                var csvReader = new CsvReader(streamReader, ",");
+                var headers = new HeaderRow(csvReader);
+
+                for (var i = 0; i < csvReader.FieldsCount; i++)
+                {
+                    var headerName = headers[i];
+                    Assert.Equal(headerName, headers[headers[headerName]]);
+                }
+            }
+        }
+
+        [Fact]
         public async Task Validate_Values_In_CSV_Finds_Errors()
         {
             var transformer = new CsvTransformer(mappingsFilePath);
@@ -51,6 +68,20 @@ namespace Crisp_CSV_ETL.Tests
             }
             Assert.Equal(6, transformer.ImportRows.Sum(r => r.ValidationErrors.Count));
             Assert.Equal(2, transformer.ImportRows.Count(r => !r.IsValid));
+        }
+
+        [Fact]
+        public async Task Extra_Import_Columns_Are_Valid()
+        {
+            var transformer = new CsvTransformer(mappingsFilePath);
+            using (var streamReader = new StreamReader("orders-sample.csv"))
+            {
+                await transformer.ReadCsvAsync(streamReader);
+            }
+            Assert.True(transformer.ImportRows.All(r => r.IsValid));
+            Assert.True(transformer.ImportRows.All(r => r["Extra Col1"] != null));
+            Assert.True(transformer.ImportRows.All(r => r["Extra Col2"] != null));
+            Assert.True(transformer.ImportRows.All(r => r["Empty Column"] != null));
         }
 
         [Fact]
